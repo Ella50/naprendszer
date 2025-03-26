@@ -1,0 +1,10 @@
+@font-face {
+    font-family: 'Bebas Neue';
+    src: url(BebasNeue-Regular.ttf);
+    font-weight: normal;
+    letter-spacing: 3px;
+  }
+
+  body {
+    font-family: 'Bebas Neue', sans-serif;
+}
