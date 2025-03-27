@@ -1,132 +1,318 @@
 // Alap Three.js setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// FONTOS! OrbitControls elérése így: `new THREE.OrbitControls`
+// OrbitControls
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.screenSpacePanning = false;
 controls.maxDistance = 500;
-
 camera.position.set(0, 10, 50);
 controls.update();
 
+// Texture loader
+const textureLoader = new THREE.TextureLoader();
+
+
+
+// Enable shadows
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 // Fények
-const light = new THREE.PointLight(0xffffff, 2, 1000);
-light.position.set(0, 0, 0);
-scene.add(light);
-scene.add(new THREE.AmbientLight(0x222222));
+const sunLight = new THREE.PointLight(0xffffee, 3, 1000);
+sunLight.position.set(0, 0, 0);
+sunLight.decay = 2;
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+scene.add(sunLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffee, 0.5);
+dirLight.position.set(5, 5, 5);
+scene.add(dirLight);
+
+const ambientLight = new THREE.AmbientLight(0x333366, 0.5);
+scene.add(ambientLight);
 
 // Nap generálása
-const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+const sunTexture = textureLoader.load(
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/sun_surface_2048.jpg',
+    undefined, 
+    undefined, 
+    () => {
+        console.error("Sun texture failed to load, using fallback");
+        sun.material.color.set(0xffcc00);
+    }
+);
+
+const sunGeometry = new THREE.SphereGeometry(5, 64, 64);
+const sunMaterial = new THREE.MeshBasicMaterial({
+    map: sunTexture,
+    color: 0xffcc00,
+    transparent: true,
+    blending: THREE.AdditiveBlending
+});
 const sun = new THREE.Mesh(sunGeometry, sunMaterial);
 scene.add(sun);
 
-let planets = [];
+// Sun effects
+const flareTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/lensflare/lensflare0.png');
+const flare = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: flareTexture,
+    transparent: true,
+    opacity: 0.8,
+    color: 0xffaa33
+}));
+flare.scale.set(10, 10, 1);
+sun.add(flare);
 
-// Véletlenszerű naprendszer generálása
-function generateSolarSystem() {
-    // Töröljük az előző bolygókat
-    planets.forEach(planet => scene.remove(planet.mesh));
-    planets = [];
+const glowLayers = [6, 8, 10];
+glowLayers.forEach(size => {
+    const glowGeometry = new THREE.SphereGeometry(size, 32, 32);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff9900,
+        transparent: true,
+        opacity: 0.3 * (1 - (size/15)),
+        blending: THREE.AdditiveBlending
+    });
+    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    sun.add(glow);
+});
 
-    const numPlanets = Math.floor(Math.random() * 6) + 3; // 3-8 bolygó
-    for (let i = 0; i < numPlanets; i++) {
-        const radius = Math.random() * 2 + 1;
-        const distance = (i + 1) * (Math.random() * 5 + 7);
-        const color = new THREE.Color(Math.random(), Math.random(), Math.random());
+// Háttér
+const galaxyTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/galaxy.png');
+scene.background = galaxyTexture;
+
+// Csillagok
+function createStarfield() {
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.15,
+        sizeAttenuation: true
+    });
+    
+    const vertices = [];
+    for (let i = 0; i < 10000; i++) {
+        vertices.push(
+            (Math.random() - 0.5) * 2500,
+            (Math.random() - 0.5) * 2500,
+            (Math.random() - 0.5) * 2500
+        );
+    }
+    
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    const stars = new THREE.Points(geometry, material);
+    scene.add(stars);
+}
+createStarfield();
+
+
+const planetTextures = {
+    // REAL SOLAR SYSTEM (accurate textures)
+    real: {
+        mercury: 'https://threejs.org/examples/textures/planets/mercury_1024.jpg',
+        venus: 'https://threejs.org/examples/textures/planets/venus_surface_1024.jpg',
+        earth: 'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
+        mars: 'https://threejs.org/examples/textures/planets/mars_1024.jpg',
+        jupiter: 'https://threejs.org/examples/textures/planets/jupiter_1024.jpg',
+        saturn: 'https://threejs.org/examples/textures/planets/saturn_1024.jpg',
+        uranus: 'https://threejs.org/examples/textures/planets/uranus_1024.jpg',
+        neptune: 'https://threejs.org/examples/textures/planets/neptune_1024.jpg'
+      },
+    
+      // RANDOM PLANETS (all direct image links)
+      random: [
+        'https://threejs.org/examples/textures/planets/earth_clouds_1024.png', // Cloudy
+        'https://threejs.org/examples/textures/planets/moon_1024.jpg', // Moon-like
+        'https://threejs.org/examples/textures/planets/pluto_1024.jpg', // Icy
+        'https://threejs.org/examples/textures/planets/ceres_1024.jpg', // Rocky
+        'https://threejs.org/examples/textures/planets/eris_1024.jpg', // Orange
+        'https://threejs.org/examples/textures/planets/venus_atmosphere_1024.png', // Hazy
+        'https://threejs.org/examples/textures/planets/makemake_1024.jpg', // Brown
+        'https://threejs.org/examples/textures/planets/haumea_1024.jpg', // White
+        'https://threejs.org/examples/textures/planets/sun_surface_2048.jpg', // Fiery
+        'https://threejs.org/examples/textures/planets/jupiter_clouds_1024.png' // Gas clouds
+      ]
+  };
+
+// Bolygó generátor osztály
+class PlanetSystem {
+    constructor() {
+        this.planets = [];
+        this.textures = {
+            earth: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg',
+            jupiter: 'https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg'
+        };
+    }
+
+    clear() {
+        this.planets.forEach(planet => scene.remove(planet.mesh));
+        this.planets = [];
+    }
+
+    createPlanet(size, distance, speed, name, isGasGiant = false, hasRings = false, textureUrl) {
+        const geometry = new THREE.SphereGeometry(size, 64, 64);
+        //const textureUrl = isGasGiant ? this.textures.jupiter : this.textures.earth;
         
-        const geometry = new THREE.SphereGeometry(radius, 32, 32);
-        const material = new THREE.MeshStandardMaterial({ color });
+        const material = new THREE.MeshStandardMaterial({
+            map: textureLoader.load(textureUrl),
+            roughness: isGasGiant ? 0.8 : 0.5,
+            metalness: isGasGiant ? 0.2 : 0.1,
+            bumpScale: isGasGiant ? 0.1 : 0.05
+        });
+
+        textureLoader.load(
+            textureUrl,
+            (texture) => {
+              material.map = texture;
+              material.needsUpdate = true;
+            },
+            undefined,
+            (err) => {
+              console.error(`Error loading texture ${textureUrl}:`, err);
+              material.color.setHex(isGasGiant ? 0xffaa33 : 0x3399ff);
+            }
+          );
+        
         const planet = new THREE.Mesh(geometry, material);
-        
+        planet.castShadow = true;
+        planet.receiveShadow = true;
         planet.position.x = distance;
+        planet.rotation.z = Math.random() * 0.5 - 0.25;
+        
+        if (!isGasGiant) {
+            this.createAtmosphere(planet, size);
+        }
+        
+        if (hasRings) {
+            this.createRings(planet, size);
+        }
+        
         scene.add(planet);
-        planets.push({ mesh: planet, distance, speed: Math.random() * 0.02 + 0.01 });
+        this.planets.push({ mesh: planet, distance, speed, name });
+    }
+
+    createAtmosphere(planet, size) {
+        const geometry = new THREE.SphereGeometry(size * 1.1, 64, 64);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x00aaff,
+            transparent: true,
+            opacity: 0.2,
+            shininess: 10
+        });
+        const atmosphere = new THREE.Mesh(geometry, material);
+        planet.add(atmosphere);
+    }
+
+    createRings(planet, size) {
+        const ringGeometry = new THREE.RingGeometry(size * 1.5, size * 2.5, 64);
+        const ringMaterial = new THREE.MeshStandardMaterial({
+            color: 0xcccccc,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.7,
+            roughness: 0.8
+        });
+        const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+        rings.rotation.x = Math.PI / 2;
+        planet.add(rings);
     }
 }
 
-generateSolarSystem();
+// Solar System instances
+const planetSystem = new PlanetSystem();
 
-// Randomizáló gomb
-const button = document.createElement('button');
-button.innerText = 'A naprendszer';
-button.style.position = 'absolute';
-button.style.top = '20px';
-button.style.left = '20px';
-button.style.padding = '10px';
-button.style.fontSize = '16px';
-document.body.appendChild(button);
-button.addEventListener('click', generateSolarSystem);
 
-// Naprendszer gomb
-const napr = document.createElement('button');
-napr.innerText = 'Valós naprendszer';
-napr.style.position = 'absolute';
-napr.style.top = '20px';
-napr.style.left = '200px';
-napr.style.padding = '10px';
-napr.style.fontSize = '16px';
-document.body.appendChild(napr);
-napr.addEventListener('click', createNaprendszer);
+// Gombok
+function createRandomSystem() {
+    planetSystem.clear();
+    const numPlanets = Math.floor(Math.random() * 6) + 3;
+    for (let i = 0; i < numPlanets; i++) {
+        const isGasGiant = Math.random() > 0.7;
+        const randomTexture = planetTextures.random[
+            Math.floor(Math.random() * planetTextures.random.length)
+          ];
+        planetSystem.createPlanet(
+            Math.random() * 2 + 1,
+            (i + 1) * (Math.random() * 5 + 7),
+            Math.random() * 0.02 + 0.01,
+            `Planet ${i+1}`,
+            isGasGiant,
+            isGasGiant && Math.random() > 0.5,
+            //`Planet ${i+1}`,
+            randomTexture 
+        );
+    }
+}
 
-const realSolarSystem = [
-    { name: "Merkúr", size: 0.38, distance: 20, color: 0xaaaaaa, speed: 0.02 },
-    { name: "Vénusz", size: 0.95, distance: 30, color: 0xffcc00, speed: 0.015 },
-    { name: "Föld", size: 1, distance: 40, color: 0x0099ff, speed: 0.01 },
-    { name: "Mars", size: 0.53, distance: 50, color: 0xff3300, speed: 0.008 },
-    { name: "Jupiter", size: 11.2, distance: 70, color: 0xff9900, speed: 0.004 },
-    { name: "Szaturnusz", size: 9.45, distance: 90, color: 0xffcc66, speed: 0.003 },
-    { name: "Uránusz", size: 4, distance: 110, color: 0x66ccff, speed: 0.002 },
-    { name: "Neptunusz", size: 3.88, distance: 130, color: 0x0000ff, speed: 0.0018 }
-];
+function createRealSystem() {
+    planetSystem.clear();
 
-function createNaprendszer() {
-    // Töröljük az előző bolygókat
-    planets.forEach(planet => scene.remove(planet.mesh));
-    planets = [];
+    const realSolarSystem = [
+        { name: "Merkúr", size: 1.5, distance: 28, speed: 0.02, isGasGiant: false, texture: planetTextures.real.mercury },
+        { name: "Vénusz", size: 3.7, distance: 40, speed: 0.015, isGasGiant: false, texture: planetTextures.real.venus },
+        { name: "Föld", size: 3.9, distance: 55, speed: 0.01, isGasGiant: false, texture: planetTextures.real.earth },
+        { name: "Mars", size: 2.1, distance: 75, speed: 0.008, isGasGiant: false, texture: planetTextures.real.mars },
+        { name: "Jupiter", size: 12, distance: 100, speed: 0.004, isGasGiant: true, texture: planetTextures.real.jupiter },
+        { name: "Szaturnusz", size: 10, distance: 130, speed: 0.003, isGasGiant: true, hasRings: true, texture: planetTextures.real.saturn },
+        { name: "Uránusz", size: 7, distance: 160, speed: 0.002, isGasGiant: true, texture: planetTextures.real.uranus },
+        { name: "Neptunusz", size: 6.8, distance: 190, speed: 0.0018, isGasGiant: true, texture: planetTextures.real.neptune}
+    ];
 
     realSolarSystem.forEach(planet => {
-        createPlanet(planet.size * 2, planet.distance, planet.color, planet.speed, planet.name);
+        planetSystem.createPlanet(
+            planet.size,
+            planet.distance,
+            planet.speed,
+            planet.name,
+            planet.isGasGiant,
+            planet.hasRings,
+            planet.texture
+        );
     });
 }
 
-function createPlanet(size, distance, color, speed, name) {
-    const geometry = new THREE.SphereGeometry(size, 32, 32);
-    const material = new THREE.MeshStandardMaterial({ color });
-    const planet = new THREE.Mesh(geometry, material);
+// Button setup
+const randomBtn = document.createElement('button');
+randomBtn.innerText = 'A naprendszer';
+randomBtn.style.position = 'absolute';
+randomBtn.style.top = '20px';
+randomBtn.style.left = '20px';
+randomBtn.style.padding = '10px';
+randomBtn.style.fontSize = '16px';
+randomBtn.addEventListener('click', createRandomSystem);
+document.body.appendChild(randomBtn);
 
-    planet.position.x = distance;
-    scene.add(planet);
-    planets.push({ mesh: planet, distance, speed, name });
-}
+const realBtn = document.createElement('button');
+realBtn.innerText = 'Valós naprendszer';
+realBtn.style.position = 'absolute';
+realBtn.style.top = '20px';
+realBtn.style.left = '200px';
+realBtn.style.padding = '10px';
+realBtn.style.fontSize = '16px';
+realBtn.addEventListener('click', createRealSystem);
+document.body.appendChild(realBtn);
 
-// Animációs ciklus
+// Animáció
 function animate() {
     requestAnimationFrame(animate);
-    planets.forEach(planet => {
+    planetSystem.planets.forEach(planet => {
         planet.mesh.position.x = Math.cos(Date.now() * 0.0005 * planet.speed) * planet.distance;
         planet.mesh.position.z = Math.sin(Date.now() * 0.0005 * planet.speed) * planet.distance;
+        planet.mesh.rotation.y += 0.005;
     });
+    controls.update();
     renderer.render(scene, camera);
 }
 animate();
 
-// Rescale ablakméret változáskor
-window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-});
-
 // Tooltip
-
 const tooltip = document.createElement('div');
 tooltip.style.position = 'absolute';
 tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
@@ -134,30 +320,23 @@ tooltip.style.color = 'white';
 tooltip.style.padding = '5px 10px';
 tooltip.style.borderRadius = '5px';
 tooltip.style.fontSize = '20px';
-tooltip.style.display = 'none'; // Alapból el van rejtve
-
+tooltip.style.display = 'none';
 document.body.appendChild(tooltip);
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-
-
 window.addEventListener('mousemove', (event) => {
-    // Egérpozíció átszámítása Three.js koordinátákra
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    // Raycaster frissítése a kamerához képest
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+    const intersects = raycaster.intersectObjects(planetSystem.planets.map(p => p.mesh));
 
     if (intersects.length > 0) {
         const planet = intersects[0].object;
-        const planetData = planets.find(p => p.mesh === planet);
-
+        const planetData = planetSystem.planets.find(p => p.mesh === planet);
         if (planetData) {
-            tooltip.innerText = planetData.name; // Kiírjuk a bolygó nevét
+            tooltip.innerText = planetData.name;
             tooltip.style.left = `${event.clientX + 10}px`;
             tooltip.style.top = `${event.clientY + 10}px`;
             tooltip.style.display = 'block';
@@ -166,3 +345,13 @@ window.addEventListener('mousemove', (event) => {
         tooltip.style.display = 'none';
     }
 });
+
+// Resize handler
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+});
+
+// Start with random system
+createRandomSystem();
