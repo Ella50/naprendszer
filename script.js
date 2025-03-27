@@ -135,10 +135,13 @@ tooltip.style.padding = '5px 10px';
 tooltip.style.borderRadius = '5px';
 tooltip.style.fontSize = '20px';
 tooltip.style.display = 'none'; // Alapból el van rejtve
+
 document.body.appendChild(tooltip);
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+
+
 
 window.addEventListener('mousemove', (event) => {
     // Egérpozíció átszámítása Three.js koordinátákra
