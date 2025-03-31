@@ -14,17 +14,8 @@ controls.maxDistance = 500;
 camera.position.set(0, 10, 50);
 controls.update();
 
-
-const ambientLight = new THREE.AmbientLight(0x333333, 0.5);
-scene.add(ambientLight);
-
 // Texture loader
-const loadingManager = new THREE.LoadingManager(
-    () => console.log("All textures loaded"),
-    (url, loaded, total) => console.log(`Loading ${url} (${loaded}/${total})`),
-    (url) => console.error(`Error loading ${url}`)
-);
-const textureLoader = new THREE.TextureLoader(loadingManager);
+const textureLoader = new THREE.TextureLoader();
 
 
 
@@ -33,7 +24,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 // Fények
-const sunLight = new THREE.PointLight(0xffffee, 2, 1000);
+const sunLight = new THREE.PointLight(0xffffee, 3, 1000);
 sunLight.position.set(0, 0, 0);
 sunLight.decay = 2;
 sunLight.castShadow = true;
@@ -45,13 +36,16 @@ const dirLight = new THREE.DirectionalLight(0xffffee, 0.5);
 dirLight.position.set(5, 5, 5);
 scene.add(dirLight);
 
-
+const ambientLight = new THREE.AmbientLight(0x333366, 0.5);
+scene.add(ambientLight);
 
 // Nap generálása
 const sunTexture = textureLoader.load(
     'kepek/2k_sun.jpg',
-
+    undefined, 
+    undefined, 
     () => {
+        console.error("Sun texture failed to load, using fallback");
         sun.material.color.set(0xffcc00);
     }
 );
@@ -60,13 +54,22 @@ const sunGeometry = new THREE.SphereGeometry(5, 64, 64);
 const sunMaterial = new THREE.MeshBasicMaterial({
     map: sunTexture,
     color: 0xffcc00,
-    transparent: false,
+    transparent: true,
     blending: THREE.AdditiveBlending
 });
 const sun = new THREE.Mesh(sunGeometry, sunMaterial);
 scene.add(sun);
 
-
+// Sun effects
+const flareTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/lensflare/lensflare0.png');
+const flare = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: flareTexture,
+    transparent: true,
+    opacity: 0.8,
+    color: 0xffaa33
+}));
+flare.scale.set(10, 10, 1);
+sun.add(flare);
 
 const glowLayers = [6, 8, 10];
 glowLayers.forEach(size => {
@@ -82,8 +85,8 @@ glowLayers.forEach(size => {
 });
 
 // Háttér
-/*const galaxyTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/galaxy.png');
-scene.background = galaxyTexture;*/
+const galaxyTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/galaxy.png');
+scene.background = galaxyTexture;
 
 // Csillagok
 function createStarfield() {
@@ -110,7 +113,6 @@ function createStarfield() {
 createStarfield();
 
 
-
 const planetTextures = {
     // REAL SOLAR SYSTEM (accurate textures)
     real: {
@@ -128,11 +130,14 @@ const planetTextures = {
       random: [
         'https://threejs.org/examples/textures/planets/earth_clouds_1024.png', // Cloudy
         'https://threejs.org/examples/textures/planets/moon_1024.jpg', // Moon-like
-        'kepek/2k_eris_fictional.jpg', // Icy
-        'kepek/2k_ceres_fictional.jpg', // Rocky
-        'kepek/2k_makemake_fictional.jpg',
-        'kepek/2k_haumea_fictional.jpg', // White
-        'kepek/2k_venus_atmosphere.jpg' // Gas clouds
+        'https://threejs.org/examples/textures/planets/pluto_1024.jpg', // Icy
+        'https://threejs.org/examples/textures/planets/ceres_1024.jpg', // Rocky
+        'https://threejs.org/examples/textures/planets/eris_1024.jpg', // Orange
+        'https://threejs.org/examples/textures/planets/venus_atmosphere_1024.png', // Hazy
+        'https://threejs.org/examples/textures/planets/makemake_1024.jpg', // Brown
+        'https://threejs.org/examples/textures/planets/haumea_1024.jpg', // White
+        'https://threejs.org/examples/textures/planets/sun_surface_2048.jpg', // Fiery
+        'https://threejs.org/examples/textures/planets/jupiter_clouds_1024.png' // Gas clouds
       ]
   };
 
@@ -140,6 +145,10 @@ const planetTextures = {
 class PlanetSystem {
     constructor() {
         this.planets = [];
+        this.textures = {
+            earth: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg',
+            jupiter: 'https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg'
+        };
     }
 
     clear() {
@@ -231,23 +240,15 @@ function createRandomSystem() {
           ];
         planetSystem.createPlanet(
             Math.random() * 2 + 1,
-            (i + 1) * (Math.random() * 5 + 15),
+            (i + 1) * (Math.random() * 5 + 7),
             Math.random() * 0.02 + 0.01,
             `Planet ${i+1}`,
             isGasGiant,
             isGasGiant && Math.random() > 0.5,
+            //`Planet ${i+1}`,
             randomTexture 
         );
     }
-}
-
-function createOrbitPath(distance) {
-    const geometry = new THREE.BufferGeometry().setFromPoints(
-        new THREE.EllipseCurve(0, 0, distance, distance, 0, Math.PI * 2, false, 0)
-            .getPoints(100)
-    );
-    const material = new THREE.LineBasicMaterial({ color: 0x555555 });
-    return new THREE.Line(geometry, material);
 }
 
 function createRealSystem() {
