@@ -428,6 +428,16 @@ realBtn.addEventListener('click', () => {
 });
 document.body.appendChild(realBtn);
 
+
+const customBtn = document.createElement('button');
+customBtn.innerText = 'Saját naprendszer';
+customBtn.style.position = 'absolute';
+customBtn.style.top = '20px';
+customBtn.style.left = '380px'; // Adjust position as needed
+customBtn.style.padding = '10px';
+customBtn.style.fontSize = '16px';
+document.body.appendChild(customBtn);
+
 // Animáció
 function animate() {
     requestAnimationFrame(animate);
