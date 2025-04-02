@@ -122,10 +122,10 @@ const planetTextures = {
         saturn: 'kepek/2k_saturn.jpg',
         uranus: 'kepek/2k_uranus.jpg',
         neptune: 'kepek/2k_neptune.jpg'
-      },
+    },
     
       // RANDOM PLANETS (all direct image links)
-      random: [
+        random: [
         'https://threejs.org/examples/textures/planets/earth_clouds_1024.png', // Cloudy
         'https://threejs.org/examples/textures/planets/moon_1024.jpg', // Moon-like
         'kepek/2k_eris_fictional.jpg', // Icy
@@ -133,8 +133,8 @@ const planetTextures = {
         'kepek/2k_makemake_fictional.jpg',
         'kepek/2k_haumea_fictional.jpg', // White
         'kepek/2k_venus_atmosphere.jpg' // Gas clouds
-      ]
-  };
+        ]
+};
 
 // Bolygó generátor osztály
 class PlanetSystem {
@@ -161,15 +161,15 @@ class PlanetSystem {
         textureLoader.load(
             textureUrl,
             (texture) => {
-              material.map = texture;
-              material.needsUpdate = true;
+                material.map = texture;
+                material.needsUpdate = true;
             },
             undefined,
             (err) => {
-              console.error(`Error loading texture ${textureUrl}:`, err);
-              material.color.setHex(isGasGiant ? 0xffaa33 : 0x3399ff);
+                console.error(`Error loading texture ${textureUrl}:`, err);
+                material.color.setHex(isGasGiant ? 0xffaa33 : 0x3399ff);
             }
-          );
+        );
         
         const planet = new THREE.Mesh(geometry, material);
         planet.castShadow = true;
@@ -228,7 +228,7 @@ function createRandomSystem() {
         const isGasGiant = Math.random() > 0.7;
         const randomTexture = planetTextures.random[
             Math.floor(Math.random() * planetTextures.random.length)
-          ];
+        ];
         planetSystem.createPlanet(
             Math.random() * 2 + 1,
             (i + 1) * (Math.random() * 5 + 15),
