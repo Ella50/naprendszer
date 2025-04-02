@@ -144,6 +144,18 @@ const planetTextures = {
         ]
 };
 
+
+const focusIndicator = document.createElement('div');
+focusIndicator.style.position = 'absolute';
+focusIndicator.style.bottom = '20px';
+focusIndicator.style.left = '20px';
+focusIndicator.style.color = 'white';
+focusIndicator.style.fontSize = '25px';
+focusIndicator.style.backgroundColor = 'rgba(0,0,0,0.7)';
+focusIndicator.style.textShadow = '0 0 5px rgba(255,255,255,0.5)';
+document.body.appendChild(focusIndicator);
+
+
 // Bolygó generátor osztály
 class PlanetSystem {
     constructor() {
@@ -201,6 +213,8 @@ class PlanetSystem {
     }
 
 
+    
+
     focusOn(planetMesh) {
         if (currentFocus === planetMesh) {
             // If already focused, return to sun view
@@ -210,48 +224,51 @@ class PlanetSystem {
         
         currentFocus = planetMesh;
 
+        const planetData = this.planets.find(p => p.mesh === planetMesh);
+        if (!planetData) return; // Safety check
+
         const direction = new THREE.Vector3()
-        .subVectors(planetMesh.position, camera.position)
-        .normalize();
+            .subVectors(planetMesh.position, camera.position)
+            .normalize();
     
-    // Calculate distance based on planet size with minimum distance
-    const planetSize = planetMesh.geometry.parameters.radius;
-    const distance = Math.min(
-        Math.max(planetSize * 8, 15), // Minimum distance
-        50 // Maximum distance
-    );
+        // Calculate distance based on planet size with minimum distance
+        const planetSize = planetMesh.geometry.parameters.radius;
+        const distance = Math.min(
+            Math.max(planetSize * 8, 15), // Minimum distance ---------------------------------
+            50 // Maximum distance
+        );
+        
+        // Target position with slight elevation
+        const targetPosition = new THREE.Vector3()
+            .copy(planetMesh.position)
+            .addScaledVector(direction, -distance);
+        targetPosition.y += distance * 0.3;
     
-    // Target position with slight elevation
-    const targetPosition = new THREE.Vector3()
-        .copy(planetMesh.position)
-        .addScaledVector(direction, -distance);
-    targetPosition.y += distance * 0.3;
-    
-    // Animate camera
-    gsap.to(camera.position, {
-        x: targetPosition.x,
-        y: targetPosition.y,
-        z: targetPosition.z,
-        duration: 1.5,
-        ease: "power2.inOut",
-        onUpdate: () => {
-            camera.lookAt(planetMesh.position);
-            controls.target.copy(planetMesh.position);
-        }
-        });
+        // Animate camera
+        gsap.to(camera.position, {
+            x: targetPosition.x,
+            y: targetPosition.y,
+            z: targetPosition.z,
+            duration: 1.5,
+            ease: "power2.inOut",
+            onUpdate: () => {
+                camera.lookAt(planetMesh.position);
+                controls.target.copy(planetMesh.position);
+            }
+            });
 
         planetMesh.material.emissive = new THREE.Color(0x333333);
-    planetMesh.material.emissiveIntensity = 0.3;
-    planetMesh.material.needsUpdate = true;
+        planetMesh.material.emissiveIntensity = 0.3;
+        planetMesh.material.needsUpdate = true;
     
-    // Remove highlight from other planets
-    this.planets.forEach(p => {
-        if (p.mesh !== planetMesh) {
-            p.mesh.material.emissiveIntensity = 0;
-            p.mesh.material.needsUpdate = true;
-        }
-    });
-
+        // Remove highlight from other planets
+        this.planets.forEach(p => {
+            if (p.mesh !== planetMesh) {
+                p.mesh.material.emissiveIntensity = 0;
+                p.mesh.material.needsUpdate = true;
+            }
+        });
+        focusIndicator.textContent = `Viewing: ${planetData.name}`;
     }
 
     focusOnSun() {
@@ -273,6 +290,7 @@ class PlanetSystem {
             p.mesh.material.emissiveIntensity = 0;
             p.mesh.material.needsUpdate = true;
         });
+        focusIndicator.textContent = 'Viewing: Sun';
     }
 
 
@@ -335,7 +353,11 @@ function createOrbitPath(distance) {
         new THREE.EllipseCurve(0, 0, distance, distance, 0, Math.PI * 2, false, 0)
             .getPoints(100)
     );
-    const material = new THREE.LineBasicMaterial({ color: 0x555555 });
+    const material = new THREE.LineBasicMaterial({ 
+        color: 0x555555,
+        transparent: true,
+        opacity: 0.5
+    });
     return new THREE.Line(geometry, material);
 }
 
@@ -448,18 +470,34 @@ window.addEventListener('mousemove', (event) => {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(planetSystem.planets.map(p => p.mesh));
+
+    const intersects = raycaster.intersectObjects(
+        [sun, ...planetSystem.planets.map(p => p.mesh)]
+    );
+
+    
 
     if (intersects.length > 0) {
         const planet = intersects[0].object;
-        const planetData = planetSystem.planets.find(p => p.mesh === planet);
+        const planetData = planet === sun 
+            ? { name: "Sun", mesh: sun }
+            : planetSystem.planets.find(p => p.mesh === planet);
+        
         if (planetData) {
-            tooltip.innerText = planetData.name;
-            tooltip.style.left = `${event.clientX + 10}px`;
-            tooltip.style.top = `${event.clientY + 10}px`;
-            tooltip.style.display = 'block';
+            // Show pointer cursor
+            renderer.domElement.style.cursor = 'pointer';
+            
+            // Update tooltip for planets (keep your existing tooltip code)
+            if (planet !== sun) {
+                tooltip.innerText = planetData.name;
+                tooltip.style.left = `${event.clientX + 10}px`;
+                tooltip.style.top = `${event.clientY + 10}px`;
+                tooltip.style.display = 'block';
+            }
         }
     } else {
+        // Reset to default cursor
+        renderer.domElement.style.cursor = '';
         tooltip.style.display = 'none';
     }
 });
