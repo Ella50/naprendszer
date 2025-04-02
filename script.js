@@ -9,7 +9,7 @@ document.body.appendChild(renderer.domElement);
 
 
 let currentFocus = null; // Tracks which object is currently centered
-const originalCameraPosition = camera.position.clone(); // Store original camera position
+const originalCameraPosition = new THREE.Vector3(0, 15, 55);
 
 
 
@@ -211,44 +211,67 @@ class PlanetSystem {
         currentFocus = planetMesh;
 
         const direction = new THREE.Vector3()
-            .subVectors(planetMesh.position, camera.position)
-            .normalize();
-        
-        // Position camera at a distance based on planet size
-        const distance = planetMesh.geometry.parameters.radius * 5;
-        const targetPosition = new THREE.Vector3()
-            .copy(planetMesh.position)
-            .addScaledVector(direction, -distance);
-        
-        // Add slight height for better viewing angle
-        targetPosition.y += distance * 0.2;
-        
-        // Move camera to look at planet
-        gsap.to(camera.position, {
-            x: targetPosition.x,
-            y: targetPosition.y,
-            z: targetPosition.z,
-            duration: 1,
-            ease: "power2.inOut",
-            onUpdate: () => {
-                camera.lookAt(planetMesh.position);
-                controls.target.copy(planetMesh.position);
-            }
+        .subVectors(planetMesh.position, camera.position)
+        .normalize();
+    
+    // Calculate distance based on planet size with minimum distance
+    const planetSize = planetMesh.geometry.parameters.radius;
+    const distance = Math.min(
+        Math.max(planetSize * 8, 15), // Minimum distance
+        50 // Maximum distance
+    );
+    
+    // Target position with slight elevation
+    const targetPosition = new THREE.Vector3()
+        .copy(planetMesh.position)
+        .addScaledVector(direction, -distance);
+    targetPosition.y += distance * 0.3;
+    
+    // Animate camera
+    gsap.to(camera.position, {
+        x: targetPosition.x,
+        y: targetPosition.y,
+        z: targetPosition.z,
+        duration: 1.5,
+        ease: "power2.inOut",
+        onUpdate: () => {
+            camera.lookAt(planetMesh.position);
+            controls.target.copy(planetMesh.position);
+        }
         });
+
+        planetMesh.material.emissive = new THREE.Color(0x333333);
+    planetMesh.material.emissiveIntensity = 0.3;
+    planetMesh.material.needsUpdate = true;
+    
+    // Remove highlight from other planets
+    this.planets.forEach(p => {
+        if (p.mesh !== planetMesh) {
+            p.mesh.material.emissiveIntensity = 0;
+            p.mesh.material.needsUpdate = true;
+        }
+    });
+
     }
 
     focusOnSun() {
         currentFocus = null;
+        
         gsap.to(camera.position, {
             x: originalCameraPosition.x,
             y: originalCameraPosition.y,
             z: originalCameraPosition.z,
-            duration: 1,
+            duration: 1.5,
             ease: "power2.inOut",
             onUpdate: () => {
                 camera.lookAt(0, 0, 0);
                 controls.target.set(0, 0, 0);
             }
+        });
+
+        this.planets.forEach(p => {
+            p.mesh.material.emissiveIntensity = 0;
+            p.mesh.material.needsUpdate = true;
         });
     }
 
@@ -356,8 +379,13 @@ randomBtn.style.left = '20px';
 randomBtn.style.padding = '10px';
 randomBtn.style.fontSize = '16px';
 randomBtn.addEventListener('click', () => {
-    planetSystem.focusOnSun();
-    setTimeout(createRandomSystem, 1000); // Wait for camera to reset
+    // Reset view first if currently focused on a planet
+    if (currentFocus && currentFocus !== sun) {
+        planetSystem.focusOnSun();
+        setTimeout(createRandomSystem, 1500); // Wait for camera to reset
+    } else {
+        createRandomSystem();
+    }
 });
 document.body.appendChild(randomBtn);
 
@@ -369,21 +397,34 @@ realBtn.style.left = '200px';
 realBtn.style.padding = '10px';
 realBtn.style.fontSize = '16px';
 realBtn.addEventListener('click', () => {
-    planetSystem.focusOnSun();
-    setTimeout(createRealSystem, 1000); // Wait for camera to reset
+    if (currentFocus && currentFocus !== sun) {
+        planetSystem.focusOnSun();
+        setTimeout(createRealSystem, 1500); // Wait for camera to reset
+    } else {
+        createRealSystem();
+    }
 });
 document.body.appendChild(realBtn);
 
 // Animáció
 function animate() {
     requestAnimationFrame(animate);
-    if (!currentFocus || currentFocus === sun) {
-        planetSystem.planets.forEach(planet => {
+    planetSystem.planets.forEach(planet => {
+        // Only update orbital position if not the focused planet
+        if (currentFocus !== planet.mesh) {
             planet.mesh.position.x = Math.cos(Date.now() * 0.0005 * planet.speed) * planet.distance;
             planet.mesh.position.z = Math.sin(Date.now() * 0.0005 * planet.speed) * planet.distance;
-            planet.mesh.rotation.y += 0.005;
-        });
+        }
+        
+        // Always rotate on axis
+        planet.mesh.rotation.y += 0.005;
+    });
+
+    // Rotate the focused planet slightly faster for emphasis
+    if (currentFocus && currentFocus !== sun) {
+        currentFocus.rotation.y += 0.01;
     }
+
     controls.update();
     renderer.render(scene, camera);
 }
