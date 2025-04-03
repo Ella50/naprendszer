@@ -122,7 +122,7 @@ createStarfield();
 const planetTextures = {
     // REAL SOLAR SYSTEM (accurate textures)
     real: {
-        mercury: 'kepek/2k_mercury.jpg',
+        mercury: 'kepek/2k_mercury.jpg',    
         venus: 'kepek/2k_venus_surface.jpg',
         earth: 'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
         mars: 'kepek/2k_mars.jpg',
@@ -141,7 +141,10 @@ const planetTextures = {
         'kepek/2k_makemake_fictional.jpg',
         'kepek/2k_haumea_fictional.jpg', // White
         'kepek/2k_venus_atmosphere.jpg' // Gas clouds
-        ]
+        ],
+        starWars: {
+           coruscant: 'kepek/cosruscant.png'
+        },
 };
 
 
@@ -374,6 +377,18 @@ function createRealSystem() {
         { name: "Uránusz", size: 7, distance: 160, speed: 0.002, isGasGiant: true, texture: planetTextures.real.uranus },
         { name: "Neptunusz", size: 6.8, distance: 190, speed: 0.0018, isGasGiant: true, texture: planetTextures.real.neptune}
     ];
+
+    const starWarsSolarSystem = [
+        { name: "Naboo", size: 1.5, distance: 28, speed: 0.02, isGasGiant: false, texture: planetTextures.starWars.naboo },
+        { name: "Tatooine", size: 3.7, distance: 40, speed: 0.015, isGasGiant: false, texture: planetTextures.starWars.tatooine },
+        { name: "Coruscant", size: 3.9, distance: 55, speed: 0.01, isGasGiant: false, texture: planetTextures.starWars.coruscant },
+        { name: "Endor", size: 2.1, distance: 75, speed: 0.008, isGasGiant: false, texture: planetTextures.starWars.endor },
+        { name: "Dagobah", size: 12, distance: 100, speed: 0.004, isGasGiant: true, texture: planetTextures.starWars.dagobah },
+        { name: "Mustafar", size: 10, distance: 130, speed: 0.003, isGasGiant: true, hasRings: true, texture: planetTextures.starWars.mustafar },
+        { name: "Alderaan", size: 7, distance: 160, speed: 0.002, isGasGiant: true, texture: planetTextures.starWars.alderaan },
+        { name: "Hoth", size: 6.8, distance: 190, speed: 0.0018, isGasGiant: true, texture: planetTextures.starWars.hoth},
+        { name: "Death Star", size: 3.0, distance: 0, speed: 0.00000001, isGasGiant: false, texture: planetTextures.starWars.deathStar }
+    ]
 
     realSolarSystem.forEach(planet => {
         planetSystem.createPlanet(
