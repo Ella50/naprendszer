@@ -1,0 +1,151 @@
+body{
+    background-color: black;
+}
+#editor{
+    letter-spacing: '1.5px';
+    position:absolute;
+    top :'0';
+    left : '0';
+    right : '0';
+    margin-Left : '20%';
+    margin-Right : '20%';
+    margin-Top : '100px';
+    background-color :chartreuse;
+    padding : '50px';
+    border-radius : '10px';
+    color : 'white';
+    display : 'none';
+    z-Index : '100%';
+    max-height: '80%';
+    overflow-y : 'auto';
+    width: 60%;
+    height: 700px;
+}
+
+
+.button-icon {
+    margin-right: 5px;
+    font-weight: bold;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: white;
+}
+.btn {
+    padding: 8px 15px;
+    margin: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+    width: 200px;
+    height: 40px;
+
+}
+.btn-primary {
+    background-color: #4CAF50;
+    color: white;
+}
+.btn-secondary {
+    background-color: #2196F3;
+    color: white;
+}
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.planet-form {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    position: relative;
+}
+#add-planet-btn {
+    margin: 15px 0;
+    bottom: 0;
+    position: absolute;
+    width: calc(100% - 10px); /* Teljes szélesség, mínusz a margó */
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+#generate-system-btn, #cancel-edit-btn {
+    flex: 1;
+    margin: 0 5px;
+}
+
+/* Törlés gomb javítása */
+.remove-planet-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: auto;
+    height: auto;
+    padding: 2px 8px;
+    font-size: 14px;
+    line-height: 1;
+}
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.slider-container {
+    margin-bottom: 10px;
+}
+.slider-value {
+    display: inline-block;
+    width: 40px;
+    text-align: right;
+}
+
+/* Reszponzív beállítások */
+@media (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+    
+    #system-editor {
+        left: 10px;
+        right: 10px;
+        width: calc(100% - 20px);
+        box-sizing: border-box;
+    }
+}
