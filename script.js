@@ -271,7 +271,7 @@ class PlanetSystem {
                 p.mesh.material.needsUpdate = true;
             }
         });
-        focusIndicator.textContent = `Viewing: ${planetData.name}`;
+        focusIndicator.textContent = `Középpont: ${planetData.name}`;
     }
 
     focusOnSun() {
@@ -293,7 +293,7 @@ class PlanetSystem {
             p.mesh.material.emissiveIntensity = 0;
             p.mesh.material.needsUpdate = true;
         });
-        focusIndicator.textContent = 'Viewing: Sun';
+        focusIndicator.textContent = 'Középpont: Nap';
     }
 
 
@@ -410,11 +410,12 @@ function createRealSystem() {
 // Button setup
 const randomBtn = document.createElement('button');
 randomBtn.innerText = 'Random naprendszer';
+randomBtn.classList.add('fogombok');
 randomBtn.style.position = 'absolute';
 randomBtn.style.top = '20px';
 randomBtn.style.left = '20px';
 randomBtn.style.padding = '10px';
-randomBtn.style.fontSize = '16px';
+
 randomBtn.addEventListener('click', () => {
     // Reset view first if currently focused on a planet
     if (currentFocus && currentFocus !== sun) {
@@ -428,11 +429,12 @@ document.body.appendChild(randomBtn);
 
 const realBtn = document.createElement('button');
 realBtn.innerText = 'Valós naprendszer';
+realBtn.classList.add('fogombok');
 realBtn.style.position = 'absolute';
 realBtn.style.top = '20px';
-realBtn.style.left = '200px';
+realBtn.style.left = '210px';
 realBtn.style.padding = '10px';
-realBtn.style.fontSize = '16px';
+
 realBtn.addEventListener('click', () => {
     if (currentFocus && currentFocus !== sun) {
         planetSystem.focusOnSun();
@@ -446,11 +448,12 @@ document.body.appendChild(realBtn);
 
 const customBtn = document.createElement('button');
 customBtn.innerText = 'Saját naprendszer';
+customBtn.classList.add('fogombok');
 customBtn.style.position = 'absolute';
 customBtn.style.top = '20px';
-customBtn.style.left = '380px'; // Adjust position as needed
+customBtn.style.left = '385px'; // Adjust position as needed
 customBtn.style.padding = '10px';
-customBtn.style.fontSize = '16px';
+
 document.body.appendChild(customBtn);
 
 // Animáció
@@ -488,18 +491,8 @@ editor.id = 'system-editor';
 editor.style.letterSpacing = '1.5px';
 editor.style.position = 'absolute';
 
-editor.style.top = '0';
-
-editor.style.left = '0';
-editor.style.right = '0';
-
-editor.style.marginLeft = '20%';
-editor.style.marginRight = '20%';
-editor.style.marginTop = '100px';
-
-
 editor.style.backgroundColor = 'rgba(0,0,0,0.85)';
-editor.style.padding = '50px';
+editor.style.padding = '25px';
 editor.style.borderRadius = '10px';
 editor.style.color = 'white';
 editor.style.display = 'none';
@@ -511,28 +504,28 @@ editor.style.overflowY = 'auto';
 // Editor tartalma
 editor.innerHTML = `
 <div class="editor-content">
-    <h2>🌌 Saját Naprendszer Szerkesztő</h2>
-    
-    <div class="form-group">
-        <h3>🪐 Naprendszer neve</h3>
-        <input type="text" id="system-name" class="form-control" placeholder="Add meg a naprendszer neve">
-    </div>
-    
-    <h3>🌍 Bolygók</h3>
-    <div id="planet-forms-container"></div>
-    
-    <div class="button-container">
-        <button id="add-planet-btn" class="btn btn-secondary">
-            ➕ Új bolygó hozzáadása
-        </button>
-    </div>
+    <h2 style="text-align:center; margin-top: 0; margin-bottom: 80px">Saját Naprendszer Szerkesztő</h2>
     
     <div class="form-actions">
         <button id="generate-system-btn" class="btn btn-primary">
-            🚀 Rendszer generálása
+            Rendszer generálása
         </button>
         <button id="cancel-edit-btn" class="btn btn-danger">
-            ❌ Mégse
+            Mégse
+        </button>
+    </div>
+    
+    <div class="form-group">
+        <h3>Naprendszer neve</h3>
+        <input type="text" id="system-name" class="form-control" placeholder="Add meg a naprendszer nevét">
+    </div>
+    
+    <h3>Bolygók</h3>
+    <div id="planet-forms-container"></div>
+        
+    <div class="button-container">
+        <button id="add-planet-btn" class="btn btn-secondary">
+            Új bolygó hozzáadása
         </button>
     </div>
 </div>
@@ -543,25 +536,26 @@ const style = document.createElement('style');
 style.innerHTML = `
     /* Alap stílusok */
     #system-editor {
+
         position: fixed;
-        top: 50%;
-        //left: 50%;
-        transform: translate(15%, 0%);
-        width: 100%;
-        max-height: 80%;
+        top: 55% !important; 
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 80%;
         max-width: 800px;
         background: rgba(0,0,0,0.95);
-        padding: 30px;
+        padding: 10px;
         border-radius: 15px;
         color: white;
         z-index: 1000;
         box-shadow: 0 0 30px rgba(0,0,0,0.7);
         border: 1px solid #444;
         overflow-y: auto;
-        display: flex;
-        flex-diraction: column;
-
+        max-height: 90vh;
+        display: none; /* Keep it hidden by default */
     }
+
+    
 
     #system-name{
         width: 97%;
@@ -572,7 +566,9 @@ style.innerHTML = `
     .button-container {
         display: flex;
         justify-content: center;
-        margin: 25px 0;
+        bottom: 0px;
+
+
     }
 
     /* Fő gombok */
@@ -587,6 +583,10 @@ style.innerHTML = `
         text-align: center;
         transition: all 0.2s;
         min-width: 180px;
+        font-family: 'Bebas Neue', sans-serif;
+        letter-spacing: 1px;
+        font-size: 13pt !important;
+        font-weight: normal;
     }
 
     /* Gomb állapotok */
@@ -603,16 +603,29 @@ style.innerHTML = `
     .btn-primary {
         background: linear-gradient(145deg, #4CAF50, #388E3C);
         color: white;
+        height: 45px;
+
+        top: 80px;
+
     }
 
     .btn-secondary {
         background: linear-gradient(145deg, #2196F3, #1976D2);
         color: white;
+        height: 45px;
+        left: 0px;
+        margin-top: 0 !important;
+        position: relative;
+
     }
 
     .btn-danger {
         background: linear-gradient(145deg, #f44336, #d32f2f);
         color: white;
+        height: 45px;
+        top: 80px;
+        left: 220px;
+
     }
 
     /* Törlés gomb */
@@ -646,13 +659,13 @@ style.innerHTML = `
         display: flex;
         justify-content: center;
         gap: 20px;
-        margin-top: 30px;
+        margin-bottom: 20px;
         flex-wrap: wrap;
     }
 
     #add-planet-btn{
-        bottom: 0;
-        height: 45px;
+
+
 
     }
 
@@ -660,10 +673,16 @@ style.innerHTML = `
     .planet-form {
         background: rgba(255,255,255,0.08);
         padding: 20px;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         border-radius: 10px;
         position: relative;
         border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    #planet-forms-container {
+
+            overflow-y: auto;
+
     }
 
     #szín{
@@ -706,6 +725,15 @@ style.innerHTML = `
         text-align: center;
 
     }
+
+    .editor-content {
+        position: relative;
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+
 
 
     /* Reszponzív beállítások */
@@ -960,7 +988,7 @@ function generateCustomSystem() {
     // Siker üzenet
     focusIndicator.textContent = `Betöltve: ${systemName}`;
     setTimeout(() => {
-        focusIndicator.textContent = 'Viewing: Sun';
+        focusIndicator.textContent = 'Középpont: Nap';
     }, 3000);
     
     // Editor bezárása
