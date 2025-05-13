@@ -944,45 +944,92 @@ function generateCustomSystem() {
     
     // Bolygók létrehozása
     planetsData.forEach(planet => {
-        let texture;
-        
-        if (planet.texture) {
-            // Ha van egyéni textúra
-            texture = textureLoader.load(planet.texture);
-        } else {
-            // Alapértelmezett színes textúra
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
+        // Ha nincs textúra megadva, használjunk alapértelmezett színt
+        if (!planet.texture) {
+            // Egyszerű szín alapú anyag, ha nincs textúra
+            const material = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(planet.color),
+                roughness: planet.isGasGiant ? 0.8 : 0.5,
+                metalness: planet.isGasGiant ? 0.2 : 0.1
+            });
             
-            // Szín gradientje
-            const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-            gradient.addColorStop(0, planet.color);
-            gradient.addColorStop(1, darkenColor(planet.color, 40));
+            const planetMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(planet.size, 64, 64),
+                material
+            );
             
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 256, 256);
+            planetMesh.position.x = planet.distance;
+            scene.add(planetMesh);
             
-            // Textúra hozzáadása
-            if (planet.isGasGiant) {
-                addGasGiantPattern(ctx, planet.color);
-            } else {
-                addPlanetDetails(ctx, planet.color);
+            planetSystem.planets.push({
+                mesh: planetMesh,
+                distance: planet.distance,
+                speed: planet.speed,
+                name: planet.name
+            });
+            
+            if (!planet.isGasGiant) {
+                planetSystem.createAtmosphere(planetMesh, planet.size);
             }
             
-            texture = new THREE.CanvasTexture(canvas);
+            if (planet.hasRings) {
+                planetSystem.createRings(planetMesh, planet.size);
+            }
+        } else {
+            // Ha van textúra megadva
+            textureLoader.load(planet.texture, (texture) => {
+                const material = new THREE.MeshStandardMaterial({
+                    map: texture,
+                    roughness: planet.isGasGiant ? 0.8 : 0.5,
+                    metalness: planet.isGasGiant ? 0.2 : 0.1
+                });
+                
+                const planetMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(planet.size, 64, 64),
+                    material
+                );
+                
+                planetMesh.position.x = planet.distance;
+                scene.add(planetMesh);
+                
+                planetSystem.planets.push({
+                    mesh: planetMesh,
+                    distance: planet.distance,
+                    speed: planet.speed,
+                    name: planet.name
+                });
+                
+                if (!planet.isGasGiant) {
+                    planetSystem.createAtmosphere(planetMesh, planet.size);
+                }
+                
+                if (planet.hasRings) {
+                    planetSystem.createRings(planetMesh, planet.size);
+                }
+            }, undefined, (err) => {
+                console.error("Textúra betöltési hiba:", err);
+                // Hiba esetén használjunk alap színt
+                const material = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(planet.color),
+                    roughness: planet.isGasGiant ? 0.8 : 0.5,
+                    metalness: planet.isGasGiant ? 0.2 : 0.1
+                });
+                
+                const planetMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(planet.size, 64, 64),
+                    material
+                );
+                
+                planetMesh.position.x = planet.distance;
+                scene.add(planetMesh);
+                planetSystem.planets.push({
+                    mesh: planetMesh,
+                    distance: planet.distance,
+                    speed: planet.speed,
+                    name: planet.name
+                });
+            });
         }
-        
-        planetSystem.createPlanet(
-            planet.size,
-            planet.distance,
-            planet.speed,
-            planet.name,
-            planet.isGasGiant,
-            planet.hasRings,
-            texture
-        );
     });
     
     // Siker üzenet
@@ -991,6 +1038,8 @@ function generateCustomSystem() {
         focusIndicator.textContent = 'Középpont: Nap';
     }, 3000);
     
+    saveSystem();
+
     // Editor bezárása
     editor.style.display = 'none';
     
@@ -1022,26 +1071,226 @@ function createPlanetPreview(color, isGasGiant) {
 }
 
 
-function saveSystem() {
-    const systemData = {
-        name: document.getElementById('system-name').value,
-        planets: []
-    };
-    
-    // ... adatok gyűjtése
-    
-    localStorage.setItem('customSystem', JSON.stringify(systemData));
-}
 
-function loadSystem() {
-    const saved = localStorage.getItem('customSystem');
-    if (saved) {
-        const systemData = JSON.parse(saved);
-        // ... betöltés implementációja
+
+
+const savedSystemsPanel = document.createElement('div');
+savedSystemsPanel.id = 'saved-systems-panel';
+savedSystemsPanel.innerHTML = `
+    <h3 style="color: #ffcc00; text-align: center; margin-top: 0;">Mentett Naprendszerek</h3>
+    <div id="saved-systems-list"></div>
+`;
+document.body.appendChild(savedSystemsPanel);
+
+// Stílus hozzáadása
+const savedSystemsStyle = document.createElement('style');
+savedSystemsStyle.innerHTML = `
+    #saved-systems-panel {
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        width: 250px;
+        max-height: 80vh;
+        background: rgba(0,0,0,0.7);
+        border: 1px solid #444;
+        border-radius: 10px;
+        padding: 15px;
+        overflow-y: auto;
+        z-index: 500;
     }
+    
+    .saved-system-btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s;
+    }
+    
+    .saved-system-btn:hover {
+        background: rgba(255,255,255,0.2);
+    }
+    
+    #saved-systems-list {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+`;
+document.head.appendChild(savedSystemsStyle);
+
+
+
+
+
+
+
+function saveSystem() {
+    const systemName = document.getElementById('system-name').value || "Névtelen naprendszer";
+    
+    // Check if name is provided
+    if (!systemName.trim()) {
+        alert("Kérlek adj meg egy nevet a naprendszernek!");
+        return;
+    }
+
+    // Collect planet data
+    const planetsData = [];
+    document.querySelectorAll('.planet-form').forEach(form => {
+        planetsData.push({
+            name: form.querySelector('.planet-name').value,
+            size: parseFloat(form.querySelector('.planet-size').value),
+            distance: parseFloat(form.querySelector('.planet-distance').value),
+            speed: parseFloat(form.querySelector('.planet-speed').value),
+            color: form.querySelector('.planet-color').value,
+            isGasGiant: form.querySelector('.planet-gasgiant').checked,
+            hasRings: form.querySelector('.planet-rings').checked,
+            texture: form.querySelector('.planet-texture').value
+        });
+    });
+
+    // Check if there are planets
+    if (planetsData.length === 0) {
+        alert("Kérlek adj hozzá legalább egy bolygót!");
+        return;
+    }
+
+    const systemData = {
+        name: systemName,
+        planets: planetsData,
+        createdAt: new Date().toISOString()
+    };
+
+    // Save to localStorage - using array instead of object
+    let savedSystems = JSON.parse(localStorage.getItem('savedSystems')) || [];
+    
+    // Check if system with this name already exists
+    const existingIndex = savedSystems.findIndex(sys => sys.name === systemName);
+    if (existingIndex >= 0) {
+        // Update existing system
+        savedSystems[existingIndex] = systemData;
+    } else {
+        // Add new system
+        savedSystems.push(systemData);
+    }
+    
+    localStorage.setItem('savedSystems', JSON.stringify(savedSystems));
+    
+    updateSavedSystemsList();
+    
+    focusIndicator.textContent = `Mentve: ${systemName}`;
+    setTimeout(() => {
+        focusIndicator.textContent = 'Középpont: Nap';
+    }, 2000);
 }
 
 
+
+
+
+
+
+function loadSystem(systemName) {
+    const savedSystems = JSON.parse(localStorage.getItem('savedSystems') || '[]');
+    const systemData = savedSystems.find(sys => sys.name === systemName);
+    
+    if (!systemData) {
+        console.error("System not found:", systemName);
+        return;
+    }
+    
+    // Clear current system
+    planetSystem.clear();
+    
+    // Load planets
+    systemData.planets.forEach(planet => {
+        planetSystem.createPlanet(
+            planet.size,
+            planet.distance,
+            planet.speed,
+            planet.name,
+            planet.isGasGiant,
+            planet.hasRings,
+            planet.texture || planet.color // Fallback to color if no texture
+        );
+    });
+    
+    // Update system name in editor
+    document.getElementById('system-name').value = systemData.name;
+    
+    focusIndicator.textContent = `Betöltve: ${systemName}`;
+    setTimeout(() => {
+        focusIndicator.textContent = 'Középpont: Nap';
+    }, 2000);
+    
+    // Focus on sun
+    planetSystem.focusOnSun();
+}
+
+
+
+
+function updateSavedSystemsList() {
+    const savedSystems = JSON.parse(localStorage.getItem('savedSystems') || []);
+    const listContainer = document.getElementById('saved-systems-list');
+    listContainer.innerHTML = '';
+    
+    if (savedSystems.length === 0) {
+        listContainer.innerHTML = '<p style="color: #aaa; text-align: center;">Nincsenek mentett naprendszerek</p>';
+        return;
+    }
+
+    savedSystems.forEach((system, index) => {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.margin = '5px 0';
+        container.style.alignItems = 'center';
+        
+        const btn = document.createElement('button');
+        btn.className = 'saved-system-btn';
+        btn.textContent = system.name;
+        btn.style.marginTop = '15px';
+        btn.style.textAlign= 'center';
+
+        btn.style.flex = '1';
+        btn.addEventListener('click', () => {
+            loadSystem(system.name);
+            editor.style.display = 'none';
+        });
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '×';
+
+        deleteBtn.style.marginTop = '20px';
+
+        deleteBtn.style.paddingTop = '4px';
+        deleteBtn.style.paddingLeft = '8px';
+
+
+        deleteBtn.style.background = '#ff4444';
+        deleteBtn.style.color = 'white';
+        deleteBtn.style.border = 'none';
+        deleteBtn.style.borderRadius = '50%';
+        deleteBtn.style.width = '25px';
+        deleteBtn.style.height = '25px';
+        deleteBtn.style.cursor = 'pointer';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const updatedSystems = savedSystems.filter((_, i) => i !== index);
+            localStorage.setItem('savedSystems', JSON.stringify(updatedSystems));
+            updateSavedSystemsList();
+        });
+        
+        container.appendChild(btn);
+        container.appendChild(deleteBtn);
+        listContainer.appendChild(container);
+    });
+}
 
 
 
@@ -1119,7 +1368,21 @@ window.addEventListener('click', (event) => {
     }
 });
 
-
+window.addEventListener('load', () => {
+    updateSavedSystemsList();
+    
+    // Optionally load the last saved system
+    const savedSystems = JSON.parse(localStorage.getItem('savedSystems')) || [];
+    if (savedSystems.length > 0) {
+        loadSystem(savedSystems[0].name);
+    } else {
+        createRandomSystem();
+    }
+    planetSystem.focusOnSun();
+});
+// Start with random system
+createRandomSystem();
+planetSystem.focusOnSun();
 
 // Resize handler
 window.addEventListener('resize', () => {
