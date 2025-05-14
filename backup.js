@@ -173,7 +173,7 @@ class PlanetSystem {
         this.orbits = [];
     }
 
-    createPlanet(size, distance, speed, name, isGasGiant = false, hasRings = false, textureUrl) {
+    createPlanet(size, distance, speed, name, isGasGiant = true, hasRings = false, textureUrl) {
         const geometry = new THREE.SphereGeometry(size, 64, 64);
         //const textureUrl = isGasGiant ? this.textures.jupiter : this.textures.earth;
         
@@ -271,7 +271,7 @@ class PlanetSystem {
                 p.mesh.material.needsUpdate = true;
             }
         });
-        focusIndicator.textContent = `Viewing: ${planetData.name}`;
+        focusIndicator.textContent = `Középpont: ${planetData.name}`;
     }
 
     focusOnSun() {
@@ -293,7 +293,7 @@ class PlanetSystem {
             p.mesh.material.emissiveIntensity = 0;
             p.mesh.material.needsUpdate = true;
         });
-        focusIndicator.textContent = 'Viewing: Sun';
+        focusIndicator.textContent = 'Középpont: Nap';
     }
 
 
@@ -368,10 +368,10 @@ function createRealSystem() {
     planetSystem.clear();
 
     const realSolarSystem = [
-        { name: "Merkúr", size: 1.5, distance: 28, speed: 0.02, isGasGiant: false, texture: planetTextures.real.mercury },
-        { name: "Vénusz", size: 3.7, distance: 40, speed: 0.015, isGasGiant: false, texture: planetTextures.real.venus },
-        { name: "Föld", size: 3.9, distance: 55, speed: 0.01, isGasGiant: false, texture: planetTextures.real.earth },
-        { name: "Mars", size: 2.1, distance: 75, speed: 0.008, isGasGiant: false, texture: planetTextures.real.mars },
+        { name: "Merkúr", size: 1.5, distance: 28, speed: 0.02, isGasGiant: true, texture: planetTextures.real.mercury },
+        { name: "Vénusz", size: 3.7, distance: 40, speed: 0.015, isGasGiant: true, texture: planetTextures.real.venus },
+        { name: "Föld", size: 3.9, distance: 55, speed: 0.01, isGasGiant: true, texture: planetTextures.real.earth },
+        { name: "Mars", size: 2.1, distance: 75, speed: 0.008, isGasGiant: true, texture: planetTextures.real.mars },
         { name: "Jupiter", size: 12, distance: 100, speed: 0.004, isGasGiant: true, texture: planetTextures.real.jupiter },
         { name: "Szaturnusz", size: 10, distance: 130, speed: 0.003, isGasGiant: true, hasRings: true, texture: planetTextures.real.saturn },
         { name: "Uránusz", size: 7, distance: 160, speed: 0.002, isGasGiant: true, texture: planetTextures.real.uranus },
@@ -410,11 +410,12 @@ function createRealSystem() {
 // Button setup
 const randomBtn = document.createElement('button');
 randomBtn.innerText = 'Random naprendszer';
+randomBtn.classList.add('fogombok');
 randomBtn.style.position = 'absolute';
 randomBtn.style.top = '20px';
 randomBtn.style.left = '20px';
 randomBtn.style.padding = '10px';
-randomBtn.style.fontSize = '16px';
+
 randomBtn.addEventListener('click', () => {
     // Reset view first if currently focused on a planet
     if (currentFocus && currentFocus !== sun) {
@@ -428,11 +429,12 @@ document.body.appendChild(randomBtn);
 
 const realBtn = document.createElement('button');
 realBtn.innerText = 'Valós naprendszer';
+realBtn.classList.add('fogombok');
 realBtn.style.position = 'absolute';
 realBtn.style.top = '20px';
-realBtn.style.left = '200px';
+realBtn.style.left = '210px';
 realBtn.style.padding = '10px';
-realBtn.style.fontSize = '16px';
+
 realBtn.addEventListener('click', () => {
     if (currentFocus && currentFocus !== sun) {
         planetSystem.focusOnSun();
@@ -446,11 +448,12 @@ document.body.appendChild(realBtn);
 
 const customBtn = document.createElement('button');
 customBtn.innerText = 'Saját naprendszer';
+customBtn.classList.add('fogombok');
 customBtn.style.position = 'absolute';
 customBtn.style.top = '20px';
-customBtn.style.left = '380px'; // Adjust position as needed
+customBtn.style.left = '385px'; // Adjust position as needed
 customBtn.style.padding = '10px';
-customBtn.style.fontSize = '16px';
+
 document.body.appendChild(customBtn);
 
 // Animáció
@@ -488,177 +491,278 @@ editor.id = 'system-editor';
 editor.style.letterSpacing = '1.5px';
 editor.style.position = 'absolute';
 
-editor.style.top = '0';
-
-editor.style.left = '0';
-editor.style.right = '0';
-
-editor.style.marginLeft = '20%';
-editor.style.marginRight = '20%';
-editor.style.marginTop = '100px';
-
-
 editor.style.backgroundColor = 'rgba(0,0,0,0.85)';
-editor.style.padding = '50px';
+editor.style.padding = '25px';
 editor.style.borderRadius = '10px';
 editor.style.color = 'white';
 editor.style.display = 'none';
-editor.style.zIndex = '100';
-editor.style.maxHeight = '80vh';
+editor.style.zIndex = '100%';
+editor.style.maxHeight = '80%';
 editor.style.overflowY = 'auto';
 
 
 // Editor tartalma
 editor.innerHTML = `
-<h2 style="margin-top:0; color:#ffcc00">Saját Naprendszer Szerkesztő</h2>
+<div class="editor-content">
+    <h2 style="text-align:center; margin-top: 0; margin-bottom: 80px">Saját Naprendszer Szerkesztő</h2>
+    
+    <div class="form-actions">
+        <button id="generate-system-btn" class="btn btn-primary">
+            Rendszer generálása
+        </button>
+        <button id="cancel-edit-btn" class="btn btn-danger">
+            Mégse
+        </button>
+    </div>
     
     <div class="form-group">
-        <label>Naprendszer neve</label>
-        <input type="text" id="system-name" class="form-control" placeholder="Az én csodálatos naprendszerem">
+        <h3>Naprendszer neve</h3>
+        <input type="text" id="system-name" class="form-control" placeholder="Add meg a naprendszer nevét">
     </div>
     
     <h3>Bolygók</h3>
     <div id="planet-forms-container"></div>
-    
+        
     <div class="button-container">
         <button id="add-planet-btn" class="btn btn-secondary">
-            <span class="button-icon">+</span> Új bolygó
+            Új bolygó hozzáadása
         </button>
     </div>
-    
-    <div class="form-actions">
-        <button id="generate-system-btn" class="btn btn-primary">Rendszer generálása</button>
-        <button id="cancel-edit-btn" class="btn btn-danger">Mégse</button>
-    </div>
+</div>
 `;
 
 // Stílusok hozzáadása
 const style = document.createElement('style');
 style.innerHTML = `
-    .button-icon {
-        margin-right: 5px;
-        font-weight: bold;
-    }
-    .form-group {
-        margin-bottom: 15px;
-    }
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-    .form-control {
-        width: 100%;
-        padding: 8px;
-        border-radius: 4px;
-        border: 1px solid #444;
-        background-color: #333;
+    /* Alap stílusok */
+    #system-editor {
+
+        position: fixed;
+        top: 55% !important; 
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 80%;
+        max-width: 800px;
+        background: rgba(0,0,0,0.95);
+        padding: 10px;
+        border-radius: 15px;
         color: white;
+        z-index: 1000;
+        box-shadow: 0 0 30px rgba(0,0,0,0.7);
+        border: 1px solid #444;
+        overflow-y: auto;
+        max-height: 90vh;
+        display: none; /* Keep it hidden by default */
     }
+
+    
+
+    #system-name{
+        width: 97%;
+
+    }
+
+    /* Gomb konténer */
+    .button-container {
+        display: flex;
+        justify-content: center;
+        bottom: 0px;
+
+
+    }
+
+    /* Fő gombok */
     .btn {
-        padding: 8px 15px;
-        margin: 5px;
+        padding: 12px 25px;
+        margin: 0 10px;
         border: none;
-        border-radius: 4px;
+        border-radius: 8px;
         cursor: pointer;
         font-weight: bold;
-        white-space: nowrap;
-
-    }
-    .btn-primary {
-        background-color: #4CAF50;
-        color: white;
-    }
-    .btn-secondary {
-        background-color: #2196F3;
-        color: white;
-    }
-    .btn-danger {
-        background-color: #f44336;
-        color: white;
+        font-size: 16px;
+        text-align: center;
+        transition: all 0.2s;
+        min-width: 180px;
+        font-family: 'Bebas Neue', sans-serif;
+        letter-spacing: 1px;
+        font-size: 13pt !important;
+        font-weight: normal;
     }
 
+    /* Gomb állapotok */
     .btn:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
     
     .btn:active {
         transform: translateY(1px);
     }
-    
-    .btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+
+    /* Gomb típusok */
+    .btn-primary {
+        background: linear-gradient(145deg, #4CAF50, #388E3C);
+        color: white;
+        height: 45px;
+
+        top: 80px;
+
     }
 
-    .planet-form {
-        background: rgba(255,255,255,0.1);
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 5px;
+    .btn-secondary {
+        background: linear-gradient(145deg, #2196F3, #1976D2);
+        color: white;
+        height: 45px;
+        left: 0px;
+        margin-top: 0 !important;
         position: relative;
+
     }
-    #add-planet-btn {
-        margin: 15px 0;
-        display: block;
-        width: calc(100% - 10px); /* Teljes szélesség, mínusz a margó */
+
+    .btn-danger {
+        background: linear-gradient(145deg, #f44336, #d32f2f);
+        color: white;
+        height: 45px;
+        top: 80px;
+        left: 220px;
+
     }
-    
-    .form-actions {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
-    }
-    
-    #generate-system-btn, #cancel-edit-btn {
-        flex: 1;
-        margin: 0 5px;
-    }
-    
-    /* Törlés gomb javítása */
+
+    /* Törlés gomb */
     .remove-planet-btn {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 15px;
+        right: 0;
         background: #ff4444;
         color: white;
         border: none;
-        border-radius: 4px;
-        width: auto;
-        height: auto;
-        padding: 2px 8px;
-        font-size: 14px;
-        line-height: 1;
-    }
-    .grid-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    .slider-container {
-        margin-bottom: 10px;
-    }
-    .slider-value {
-        display: inline-block;
-        width: 40px;
-        text-align: right;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+
+
     }
 
-/* Reszponzív beállítások */
+    .remove-planet-btn:hover {
+        background: #ff0000;
+        transform: scale(1.1);
+    }
+
+    /* Form-actions konténer */
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    #add-planet-btn{
+
+
+
+    }
+
+    /* Bolygó form stílus */
+    .planet-form {
+        background: rgba(255,255,255,0.08);
+        padding: 20px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        position: relative;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    #planet-forms-container {
+
+            overflow-y: auto;
+
+    }
+
+    #szín{
+        height: 40px;
+
+
+    }
+
+    /* Grid layout */
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    /* Input mezők */
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #444;
+        background-color: rgba(0,0,0,0.5);
+        color: white;
+        font-size: 14px;
+    }
+
+    #nev, #meret, #tav, #gyorsasag, #szín{
+        width: 280px;
+
+    }
+
+    /* Címek */
+    h2, h3, h4 {
+        color: #ffcc00;
+        margin-bottom: 15px;
+
+    }
+
+    h4{
+        text-align: center;
+
+    }
+
+    .editor-content {
+        position: relative;
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+
+
+
+    /* Reszponzív beállítások */
     @media (max-width: 768px) {
+        #system-editor {
+            width: 95%;
+            padding: 20px;
+        }
+        
+        .btn {
+            min-width: 140px;
+            padding: 10px 15px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+
+    @media (max-width: 480px) {
         .grid-container {
             grid-template-columns: 1fr;
         }
         
         #system-editor {
-            left: 10px;
-            right: 10px;
-            width: calc(100% - 20px);
-            box-sizing: border-box;
+            top: 50px;
         }
     }
-
 `;
 document.head.appendChild(style);
 document.body.appendChild(editor);
@@ -680,52 +784,54 @@ function createPlanetForm(planetData = {}, index = 0) {
     
     return `
         <div class="planet-form" data-index="${index}">
-            <button class="remove-planet-btn">×</button>
-            <h4>${data.name}</h4>
+            <div id="elsoSor">
+                <button class="remove-planet-btn">×</button>
+                <h4>${data.name}</h4>
+            </div>
+
             
             <div class="grid-container">
                 <div class="form-group">
                     <label>Név</label>
-                    <input type="text" class="planet-name form-control" value="${data.name}">
+                    <input type="text" id="nev" class="planet-name form-control" value="${data.name}">
                 </div>
                 
                 <div class="form-group">
                     <label>Szín</label>
-                    <input type="color" class="planet-color form-control" value="${data.color}">
+                    <input type="color" id="szín" class="planet-color form-control" value="${data.color}">
                 </div>
                 
                 <div class="slider-container">
                     <label>Méret: <span class="slider-value">${data.size}</span></label>
-                    <input type="range" class="planet-size form-control" min="0.5" max="15" step="0.1" value="${data.size}">
+                    <input type="range" id="meret" class="planet-size form-control" min="0.5" max="15" step="0.1" value="${data.size}">
                 </div>
                 
                 <div class="slider-container">
                     <label>Távolság: <span class="slider-value">${data.distance}</span></label>
-                    <input type="range" class="planet-distance form-control" min="10" max="200" step="1" value="${data.distance}">
+                    <input type="range" id="tav" class="planet-distance form-control" min="10" max="200" step="1" value="${data.distance}">
                 </div>
                 
                 <div class="slider-container">
                     <label>Sebesség: <span class="slider-value">${data.speed}</span></label>
-                    <input type="range" class="planet-speed form-control" min="0.001" max="0.05" step="0.001" value="${data.speed}">
+                    <input type="range" id="gyorsasag" class="planet-speed form-control" min="0.001" max="0.05" step="0.001" value="${data.speed}">
                 </div>
                 
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" class="planet-gasgiant" ${data.isGasGiant ? 'checked' : ''}>
+                    <label style="padding-top:35px">
+                        <input type="checkbox" id="gazOrias" class="planet-gasgiant" ${data.isGasGiant ? 'checked' : ''}>
                         Gázóriás
-                    </label>
-                </div>
-                
-                <div class="form-group">
+                    </label><br>
                     <label>
-                        <input type="checkbox" class="planet-rings" ${data.hasRings ? 'checked' : ''}>
+                        <input type="checkbox" id="gyuruk" class="planet-rings" ${data.hasRings ? 'checked' : ''}>
                         Van gyűrűje
                     </label>
                 </div>
                 
+
+                
                 <div class="form-group">
                     <label>Textúra (opcionális)</label>
-                    <input type="text" class="planet-texture form-control" placeholder="Textúra URL" value="${data.texture}">
+                    <input type="text" id="textura" class="planet-texture form-control" placeholder="Textúra URL" value="${data.texture}">
                 </div>
             </div>
         </div>
@@ -817,9 +923,11 @@ function updatePlanetNumbers() {
 function generateCustomSystem() {
     // Régi rendszer törlése
     planetSystem.clear();
+
     
     // Rendszer nevének lekérdezése
     const systemName = document.getElementById('system-name').value || "Saját naprendszer";
+
     
     // Bolygó adatok gyűjtése
     const planetsData = [];
@@ -838,72 +946,111 @@ function generateCustomSystem() {
     
     // Bolygók létrehozása
     planetsData.forEach(planet => {
-        let texture;
-        
-        if (planet.texture) {
-            // Ha van egyéni textúra
-            texture = textureLoader.load(planet.texture);
-        } else {
-            // Alapértelmezett színes textúra
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
+        // Ha nincs textúra megadva, használjunk alapértelmezett színt
+        if (!planet.texture) {
+            // Egyszerű szín alapú anyag, ha nincs textúra
+            const material = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(planet.color),
+                roughness: planet.isGasGiant ? 0.8 : 0.5,
+                metalness: planet.isGasGiant ? 0.2 : 0.1
+            });
             
-            // Szín gradientje
-            const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-            gradient.addColorStop(0, planet.color);
-            gradient.addColorStop(1, darkenColor(planet.color, 40));
+            const planetMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(planet.size, 64, 64),
+                material
+            );
             
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 256, 256);
+            planetMesh.position.x = planet.distance;
+            scene.add(planetMesh);
             
-            // Textúra hozzáadása
-            if (planet.isGasGiant) {
-                addGasGiantPattern(ctx, planet.color);
-            } else {
-                addPlanetDetails(ctx, planet.color);
+            planetSystem.planets.push({
+                mesh: planetMesh,
+                distance: planet.distance,
+                speed: planet.speed,
+                name: planet.name
+            });
+            
+            if (!planet.isGasGiant) {
+                planetSystem.createAtmosphere(planetMesh, planet.size);
             }
             
-            texture = new THREE.CanvasTexture(canvas);
+            if (planet.hasRings) {
+                planetSystem.createRings(planetMesh, planet.size);
+            }
+        } else {
+            // Ha van textúra megadva
+            textureLoader.load(planet.texture, (texture) => {
+                const material = new THREE.MeshStandardMaterial({
+                    map: texture,
+                    roughness: planet.isGasGiant ? 0.8 : 0.5,
+                    metalness: planet.isGasGiant ? 0.2 : 0.1
+                });
+                
+                const planetMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(planet.size, 64, 64),
+                    material
+                );
+                
+                planetMesh.position.x = planet.distance;
+                scene.add(planetMesh);
+                
+                planetSystem.planets.push({
+                    mesh: planetMesh,
+                    distance: planet.distance,
+                    speed: planet.speed,
+                    name: planet.name
+                });
+                
+                if (!planet.isGasGiant) {
+                    planetSystem.createAtmosphere(planetMesh, planet.size);
+                }
+                
+                if (planet.hasRings) {
+                    planetSystem.createRings(planetMesh, planet.size);
+                }
+            }, undefined, (err) => {
+                console.error("Textúra betöltési hiba:", err);
+                // Hiba esetén használjunk alap színt
+                const material = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(planet.color),
+                    roughness: planet.isGasGiant ? 0.8 : 0.5,
+                    metalness: planet.isGasGiant ? 0.2 : 0.1
+                });
+                
+                const planetMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(planet.size, 64, 64),
+                    material
+                );
+                
+                planetMesh.position.x = planet.distance;
+                scene.add(planetMesh);
+                planetSystem.planets.push({
+                    mesh: planetMesh,
+                    distance: planet.distance,
+                    speed: planet.speed,
+                    name: planet.name
+                });
+            });
         }
-        
-        planetSystem.createPlanet(
-            planet.size,
-            planet.distance,
-            planet.speed,
-            planet.name,
-            planet.isGasGiant,
-            planet.hasRings,
-            texture
-        );
     });
     
     // Siker üzenet
     focusIndicator.textContent = `Betöltve: ${systemName}`;
     setTimeout(() => {
-        focusIndicator.textContent = 'Viewing: Sun';
+        focusIndicator.textContent = 'Középpont: Nap';
     }, 3000);
     
+    saveSystem();
+
     // Editor bezárása
     editor.style.display = 'none';
     
     // Napra fókuszálás
     planetSystem.focusOnSun();
+    systemName.innerHTML="Névtelen naprendszer";
 }
 
-// Segédfüggvények a textúrákhoz
-function darkenColor(color, percent) {
-    // ... (szín sötétítés implementációja)
-}
 
-function addGasGiantPattern(ctx, baseColor) {
-    // ... (gázóriás mintázat implementációja)
-}
-
-function addPlanetDetails(ctx, baseColor) {
-    // ... (szilárd bolygó részletek implementációja)
-}
 
 
 function createPlanetPreview(color, isGasGiant) {
@@ -916,26 +1063,294 @@ function createPlanetPreview(color, isGasGiant) {
 }
 
 
-function saveSystem() {
-    const systemData = {
-        name: document.getElementById('system-name').value,
-        planets: []
-    };
-    
-    // ... adatok gyűjtése
-    
-    localStorage.setItem('customSystem', JSON.stringify(systemData));
-}
 
-function loadSystem() {
-    const saved = localStorage.getItem('customSystem');
-    if (saved) {
-        const systemData = JSON.parse(saved);
-        // ... betöltés implementációja
+
+
+const savedSystemsPanel = document.createElement('div');
+savedSystemsPanel.id = 'saved-systems-panel';
+savedSystemsPanel.innerHTML = `
+    <h3 style="color: #ffcc00; text-align: center; margin-top: 0;">Mentett Naprendszerek</h3>
+    <div id="saved-systems-list"></div>
+`;
+document.body.appendChild(savedSystemsPanel);
+
+// Stílus hozzáadása
+const savedSystemsStyle = document.createElement('style');
+savedSystemsStyle.innerHTML = `
+    #saved-systems-panel {
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        width: 270px;
+        max-height: 300;
+        height:auto;
+        min-height: 100px;
+        background: rgba(0,0,0,0.7);
+        border: 1px solid #444;
+        border-radius: 10px;
+        padding: 15px;
+        overflow-y: auto;
+        z-index: 500;
     }
+    
+    .saved-system-btn {
+        display: block;
+        width: 250px;
+        padding: 10px;
+        margin: 5px 0;
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    
+    .saved-system-btn:hover {
+        background: rgba(255,255,255,0.2);
+    }
+    
+    #saved-systems-list {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .delete-system-btn {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .delete-system-btn:hover {
+        background: #ff0000;
+    }
+    
+    .empty-message {
+        color: #aaa;
+        text-align: center;
+        padding: 20px 0;
+        font-style: italic;
+    }
+`;
+document.head.appendChild(savedSystemsStyle);
+
+
+
+
+
+
+
+function saveSystem() {
+    const systemName = document.getElementById('system-name').value || "Névtelen naprendszer";
+
+    
+    // Check if name is provided
+    if (!systemName.trim()) {
+        alert("Kérlek adj meg egy nevet a naprendszernek!");
+        return;
+    }
+
+    // Collect planet data
+    const planetsData = [];
+    document.querySelectorAll('.planet-form').forEach(form => {
+        planetsData.push({
+            name: form.querySelector('.planet-name').value,
+            size: parseFloat(form.querySelector('.planet-size').value),
+            distance: parseFloat(form.querySelector('.planet-distance').value),
+            speed: parseFloat(form.querySelector('.planet-speed').value),
+            color: form.querySelector('.planet-color').value,
+            isGasGiant: form.querySelector('.planet-gasgiant').checked,
+            hasRings: form.querySelector('.planet-rings').checked,
+            texture: form.querySelector('.planet-texture').value
+        });
+    });
+
+    // Check if there are planets
+    if (planetsData.length === 0) {
+        alert("Kérlek adj hozzá legalább egy bolygót!");
+        return;
+    }
+
+    const systemData = {
+        name: systemName,
+        planets: planetsData,
+        createdAt: new Date().toISOString()
+    };
+
+    // Save to localStorage - using array instead of object
+    let savedSystems = JSON.parse(localStorage.getItem('savedSystems')) || [];
+    
+    // Check if system with this name already exists
+    const existingIndex = savedSystems.findIndex(sys => sys.name === systemName);
+    if (existingIndex >= 0) {
+        // Update existing system
+        savedSystems[existingIndex] = systemData;
+    } else {
+        // Add new system
+        savedSystems.push(systemData);
+    }
+    
+    localStorage.setItem('savedSystems', JSON.stringify(savedSystems));
+    
+    updateSavedSystemsList();
+    
+    focusIndicator.textContent = `Mentve: ${systemName}`;
+    setTimeout(() => {
+        focusIndicator.textContent = 'Középpont: Nap';
+    }, 2000);
 }
 
 
+
+
+
+
+
+function loadSystem(systemName) {
+    const savedSystems = JSON.parse(localStorage.getItem('savedSystems') || '[]');
+    const systemData = savedSystems.find(sys => sys.name === systemName);
+    
+    if (!systemData) {
+        console.error("System not found:", systemName);
+        return;
+    }
+    
+    // Clear current system
+    planetSystem.clear();
+    
+    // Load planets
+    systemData.planets.forEach(planet => {
+        // If texture is provided, use it, otherwise use color
+        if (planet.texture) {
+            // Load planet with texture
+            planetSystem.createPlanet(
+                planet.size,
+                planet.distance,
+                planet.speed,
+                planet.name,
+                planet.isGasGiant,
+                planet.hasRings,
+                planet.texture
+            );
+        } else {
+            // Create a temporary material with the saved color
+            const tempMaterial = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(planet.color),
+                roughness: planet.isGasGiant ? 0.8 : 0.5,
+                metalness: planet.isGasGiant ? 0.2 : 0.1
+            });
+            
+            const geometry = new THREE.SphereGeometry(planet.size, 64, 64);
+            const planetMesh = new THREE.Mesh(geometry, tempMaterial);
+            planetMesh.position.x = planet.distance;
+            scene.add(planetMesh);
+            
+            planetSystem.planets.push({
+                mesh: planetMesh,
+                distance: planet.distance,
+                speed: planet.speed,
+                name: planet.name
+            });
+            
+            if (!planet.isGasGiant) {
+                planetSystem.createAtmosphere(planetMesh, planet.size);
+            }
+            
+            if (planet.hasRings) {
+                planetSystem.createRings(planetMesh, planet.size);
+            }
+        }
+    });
+    
+    // Update system name in editor
+    document.getElementById('system-name').value = systemData.name;
+    
+    focusIndicator.textContent = `Betöltve: ${systemName}`;
+    setTimeout(() => {
+        focusIndicator.textContent = 'Középpont: Nap';
+    }, 2000);
+    
+    // Focus on sun
+    planetSystem.focusOnSun();
+}
+
+
+
+
+function updateSavedSystemsList() {
+    const savedSystems = JSON.parse(localStorage.getItem('savedSystems') || []);
+    const listContainer = document.getElementById('saved-systems-list');
+    listContainer.innerHTML = '';
+    
+    if (savedSystems.length === 0) {
+        listContainer.innerHTML = '<p style="color: #aaa; text-align: center;">Nincsenek mentett naprendszerek</p>';
+        return;
+    }
+
+    savedSystems.forEach((system, index) => {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.margin = '5px 0';
+        container.style.alignItems = 'center';
+        
+        const btn = document.createElement('button');
+        btn.className = 'saved-system-btn';
+
+        btn.textContent = system.name;
+        btn.style.textAlign= 'center';
+        btn.style.marginTop =  `${index * 40 + 25}px`;
+        btn.style.flex = '1';
+        btn.style.fontFamily = 'Bebas Neue';
+        btn.style.letterSpacing = '1px';
+
+        btn.addEventListener('click', () => {
+            loadSystem(system.name);
+            editor.style.display = 'none';
+        });
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '×';
+        deleteBtn.style.position = 'absolute';
+        deleteBtn.style.display = 'flex';
+        deleteBtn.style.marginTop = `${index * 40 + 31}px`;
+        deleteBtn.style.marginLeft= '10px';
+        deleteBtn.style.paddingTop = '4px';
+        deleteBtn.style.paddingLeft = '8px';
+        deleteBtn.style.background = '#ff4444';
+        deleteBtn.style.color = 'white';
+        deleteBtn.style.border = 'none';
+        deleteBtn.style.borderRadius = '50%';
+        deleteBtn.style.width = '25px';
+        deleteBtn.style.height = '25px';
+        deleteBtn.style.cursor = 'pointer';
+
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm(`Biztosan törlöd a "${system.name}" naprendszert?`)) {
+                const updatedSystems = savedSystems.filter((_, i) => i !== index);
+                localStorage.setItem('savedSystems', JSON.stringify(updatedSystems));
+                updateSavedSystemsList();
+                planetSystem.clear();
+            }
+        });
+        
+        container.appendChild(btn);
+        container.appendChild(deleteBtn);
+        listContainer.appendChild(container);
+    });
+}
 
 
 
@@ -1013,7 +1428,21 @@ window.addEventListener('click', (event) => {
     }
 });
 
-
+window.addEventListener('load', () => {
+    updateSavedSystemsList();
+    
+    // Optionally load the last saved system
+    const savedSystems = JSON.parse(localStorage.getItem('savedSystems')) || [];
+    if (savedSystems.length > 0) {
+        loadSystem(savedSystems[0].name);
+    } else {
+        createRandomSystem();
+    }
+    planetSystem.focusOnSun();
+});
+// Start with random system
+createRandomSystem();
+planetSystem.focusOnSun();
 
 // Resize handler
 window.addEventListener('resize', () => {
