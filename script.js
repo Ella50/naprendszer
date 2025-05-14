@@ -1284,10 +1284,7 @@ saveCurrentBtn.addEventListener('click', () => {
         console.log("Successfully saved system to localStorage");
         updateSavedSystemsList();
         
-        focusIndicator.textContent = `Saved: ${defaultName}`;
-        setTimeout(() => {
-            focusIndicator.textContent = 'Focus: Sun';
-        }, 2000);
+        
     } catch (error) {
         console.error("Error saving to localStorage:", error);
         alert("Failed to save the solar system. Check console for details.");

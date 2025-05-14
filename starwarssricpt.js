@@ -1,5 +1,5 @@
 // Alap Three.js setup
-import * as THREE from 'three';
+
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -301,7 +301,7 @@ class PlanetSystem {
             p.mesh.material.emissiveIntensity = 0;
             p.mesh.material.needsUpdate = true;
         });
-        focusIndicator.textContent = 'Középpont: Halálcsilag';
+        focusIndicator.textContent = 'Középpont: Halálcsillag';
     }
 
     createAtmosphere(planet, size) {
