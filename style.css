@@ -10,3 +10,22 @@
     letter-spacing: 1px;
 }
 
+.fogombok{
+  background-color: black;
+  border: 2px solid grey;
+  border-radius: 5px;
+  color: aliceblue;
+  padding: 5px;
+  
+
+
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  font-size: 15pt;
+
+}
+
+.fogombok:hover{
+  top: 15px;
+  background-color: rgb(27, 30, 32);
+}
