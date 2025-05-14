@@ -29,3 +29,7 @@
   top: 15px;
   background-color: rgb(27, 30, 32);
 }
+
+button{
+  cursor: pointer;
+}
