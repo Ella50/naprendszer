@@ -89,23 +89,7 @@ glowLayers.forEach(size => {
     sun.add(glow);
 });
 
-const deathStarTexture = textureLoader.load(
-    'kepek/deathStar.png',
 
-    () => {
-        DS.material.color.set(0xffcc00);
-    }
-);
-
-const DSGeometry = new THREE.SphereGeometry(5, 64, 64);
-const DSMaterial = new THREE.MeshBasicMaterial({
-    map: deathStarTexture,
-    color: 0xffcc00,
-    transparent: false,
-    blending: THREE.AdditiveBlending
-});
-const DS = new THREE.Mesh(DSGeometry, DSMaterial);
-scene.add(DS);
 
 // Háttér
 /*const galaxyTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/galaxy.png');
@@ -167,6 +151,8 @@ const planetTextures = {
         naboo: 'kepek/naboo.png',
         mustafar: 'kepek/mustafar.png',
         deathStar: 'kepek/deathStar.png',
+        dagobah: 'kepek/dagobah.png',
+        hoth: 'kepek/hoth.png',
 
     },
 };
@@ -422,15 +408,14 @@ function createStarWarsSystem() {
     planetSystem.clear();
 
     const starWarsSolarSystem = [
-        { name: "Naboo", size: 1.5, distance: 28, speed: 0.02, isGasGiant: true, texture: planetTextures.starWars.naboo },
-        { name: "Tatooine", size: 3.7, distance: 40, speed: 0.015, isGasGiant: true, texture: planetTextures.starWars.tatooine },
-        { name: "Coruscant", size: 3.9, distance: 55, speed: 0.01, isGasGiant: true, texture: planetTextures.starWars.coruscant },
-        { name: "Kashyyyk", size: 2.1, distance: 75, speed: 0.008, isGasGiant: true, texture: planetTextures.starWars.kashyyyk },
-        { name: "Dagobah", size: 12, distance: 100, speed: 0.004, isGasGiant: false, texture: planetTextures.starWars.dagobah },
-        { name: "Mustafar", size: 10, distance: 130, speed: 0.003, isGasGiant: true, texture: planetTextures.starWars.mustafar },
-        { name: "Alderaan", size: 7, distance: 160, speed: 0.002, isGasGiant: false, texture: planetTextures.starWars.alderaan },
-        { name: "Hoth", size: 6.8, distance: 190, speed: 0.0018, isGasGiant: false, texture: planetTextures.starWars.hoth},
-        { name: "Death Star", size: 3.0, distance: 0, speed: 0.00000001, isGasGiant: false, texture: planetTextures.starWars.deathStar }
+        { name: "Naboo", size: 3.86, distance: 60, speed: 0.02, isGasGiant: true, texture: planetTextures.starWars.naboo },
+        { name: "Tatooine", size: 3.33, distance: 80, speed: 0.015, isGasGiant: true, texture: planetTextures.starWars.tatooine },
+        { name: "Coruscant", size: 3.9, distance: 20, speed: 0.01, isGasGiant: true, texture: planetTextures.starWars.coruscant },
+        { name: "Kashyyyk", size: 3.94, distance: 70, speed: 0.008, isGasGiant: true, texture: planetTextures.starWars.kashyyyk },
+        { name: "Dagobah", size: 2.84, distance: 100, speed: 0.004, isGasGiant: true, texture: planetTextures.starWars.dagobah },
+        { name: "Mustafar", size: 1.34, distance: 110, speed: 0.003, isGasGiant: true, texture: planetTextures.starWars.mustafar },
+        { name: "Alderaan", size: 3.98, distance: 40, speed: 0.002, isGasGiant: false, texture: planetTextures.starWars.alderaan },
+        { name: "Hoth", size: 2.29, distance: 140, speed: 0.0018, isGasGiant: true, texture: planetTextures.starWars.hoth},
     ];
 
      starWarsSolarSystem.forEach(planet => {
@@ -491,13 +476,14 @@ document.body.appendChild(realBtn);
 
 const starWarsBtn = document.createElement('button');
 starWarsBtn.innerText = 'Star Wars naprendszer';
+starWarsBtn.classList.add('fogombok');
 starWarsBtn.style.position = 'absolute';
 starWarsBtn.style.top = '20px';
-starWarsBtn.style.left = '550px';
+starWarsBtn.style.left = '560px';
 starWarsBtn.style.padding = '10px';
-starWarsBtn.style.fontSize = '16px';
 starWarsBtn.addEventListener('click', () => {
-    if (currentFocus && currentFocus !== DS) {
+    window.location.href = 'starwars.html';
+    if (currentFocus && currentFocus !== sun) {
         planetSystem.focusOnSun();
         setTimeout(createStarWarsSystem, 1500); // Wait for camera to reset
     } else {
@@ -1752,4 +1738,5 @@ window.addEventListener('resize', () => {
 
 // Start with random system
 createRandomSystem();
+
 planetSystem.focusOnSun();
